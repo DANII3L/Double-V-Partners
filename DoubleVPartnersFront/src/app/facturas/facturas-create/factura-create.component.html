@@ -1,0 +1,183 @@
+<div class="container py-4">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h2 class="m-0">{{ titulo }}</h2>
+    <div class="d-flex gap-2">
+      <button type="button" class="btn btn-outline-secondary" (click)="nuevo()">Nuevo</button>
+      <a class="btn btn-outline-secondary" routerLink="/facturas">Volver</a>
+    </div>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="guardar()" class="row g-3" [class.disabled]="loading()">
+    <div class="col-md-4">
+      <label class="form-label">Número</label>
+      <div class="input-group">
+        <input 
+          type="text" 
+          class="form-control" 
+          formControlName="numero" 
+          [disabled]="loading()" 
+          (blur)="validarNumeroFactura()"
+          [class.is-invalid]="numeroError()"
+          [class.is-valid]="!numeroError() && !validandoNumero() && numero?.value?.length >= 3"
+        />
+        @if (validandoNumero()) {
+          <span class="input-group-text">
+            <div class="spinner-border spinner-border-sm text-primary" role="status">
+              <span class="visually-hidden">Validando...</span>
+            </div>
+          </span>
+        }
+      </div>
+      @if (numero?.touched && numero?.invalid) {
+        <div class="text-danger small">Número es requerido (mín. 3 caracteres)</div>
+      }
+      @if (numeroError()) {
+        <div class="text-danger small">{{ numeroError() }}</div>
+      }
+      @if (!numeroError() && !validandoNumero() && numero?.value?.length >= 3) {
+        <div class="text-success small">
+          <i class="bi bi-check-circle-fill me-1"></i>
+          Número disponible
+        </div>
+      }
+    </div>
+
+    <div class="col-md-4">
+      <label class="form-label">Fecha</label>
+      <input type="date" class="form-control" formControlName="fecha" [disabled]="loading()" />
+      @if (fecha?.touched && fecha?.invalid) {
+        <div class="text-danger small">Fecha es requerida</div>
+      }
+    </div>
+
+    <div class="col-md-4">
+      <label class="form-label">Cliente</label>
+      <select class="form-select" formControlName="clienteId" [disabled]="loading() || cargandoClientes()">
+        <option [ngValue]="null">
+          @if (cargandoClientes()) {
+            Cargando clientes...
+          } @else {
+            Seleccione...
+          }
+        </option>
+        @for (c of clientes(); track c.id) {
+          <option [ngValue]="c.id">{{ c.nombre }} {{ c.apellido }}</option>
+        }
+      </select>
+      @if (clienteId?.touched && clienteId?.invalid) {
+        <div class="text-danger small">Cliente es requerido</div>
+      }
+      @if (cargandoClientes()) {
+        <div class="text-muted small">
+          <div class="spinner-border spinner-border-sm me-1" role="status"></div>
+          Cargando clientes...
+        </div>
+      }
+    </div>
+
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <h5 class="m-0">Detalle</h5>
+        <button type="button" class="btn btn-sm btn-primary" (click)="agregarProducto()" [disabled]="loading()">Agregar producto</button>
+      </div>
+      <div class="table-responsive mt-2">
+        <table class="table table-sm align-middle">
+          <thead class="table-light">
+            <tr>
+              <th style="width: 28%">Producto</th>
+              <th>Precio Unitario</th>
+              <th>Imagen</th>
+              <th style="width: 120px">Cantidad</th>
+              <th class="text-end">Total</th>
+            </tr>
+          </thead>
+          <tbody formArrayName="detalles">
+            @for (ctrl of detalles.controls; track $index; let i = $index) {
+              <tr [formGroupName]="i">
+                <td>
+                  <select class="form-select form-select-sm" formControlName="productoId">
+                    <option [ngValue]="null">Seleccione...</option>
+                    @for (p of productos(); track p.id) {
+                      <option [ngValue]="p.id">{{ p.nombre }}</option>
+                    }
+                  </select>
+                </td>
+                <td>
+                  <input class="form-control form-control-sm" type="number" formControlName="precioUnitario" [disabled]="true" />
+                </td>
+                <td>
+                  @if ((ctrl.get('imagenUrl')?.value)) {
+                    <img [src]="ctrl.get('imagenUrl')?.value" alt="img" width="40" height="40" />
+                  }
+                </td>
+                <td>
+                  <input class="form-control form-control-sm" type="number" formControlName="cantidad" />
+                </td>
+                <td class="text-end">
+                  {{ ctrl.get('total')?.value | number:'1.2-2' }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="col-12 d-flex justify-content-end">
+      <div style="min-width:260px" class="border rounded p-3">
+        <div class="d-flex justify-content-between"><span>Subtotal</span><strong>{{ subtotal() | number:'1.2-2' }}</strong></div>
+        <div class="d-flex justify-content-between"><span>Impuestos (19%)</span><strong>{{ impuestos() | number:'1.2-2' }}</strong></div>
+        <div class="d-flex justify-content-between border-top pt-2"><span>Total</span><strong>{{ total | number:'1.2-2' }}</strong></div>
+      </div>
+    </div>
+
+    <!-- Mensajes de estado -->
+    @if (loading()) {
+      <div class="col-12">
+        <div class="alert alert-info d-flex align-items-center" role="alert">
+          <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
+            <span class="visually-hidden">Cargando...</span>
+          </div>
+          <strong>Guardando factura...</strong>
+          <span class="ms-2">Por favor espere mientras se procesa la información.</span>
+        </div>
+      </div>
+    }
+
+    @if (success()) {
+      <div class="col-12">
+        <div class="alert alert-success d-flex align-items-center" role="alert">
+          <i class="bi bi-check-circle-fill me-2"></i>
+          <div>
+            <strong>¡Factura creada exitosamente!</strong>
+            <p class="mb-0">La factura ha sido guardada correctamente. Redirigiendo a la lista de facturas...</p>
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (error()) {
+      <div class="col-12">
+        <div class="alert alert-danger d-flex align-items-center" role="alert">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>
+          <div>
+            <strong>Error al guardar la factura</strong>
+            <p class="mb-0">{{ error() }}</p>
+          </div>
+        </div>
+      </div>
+    }
+
+    <div class="col-12 d-flex gap-2">
+      <button class="btn btn-primary" type="submit" [disabled]="loading()">
+        @if (loading()) {
+          <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+        }
+        Guardar
+      </button>
+      <a class="btn btn-secondary" routerLink="/facturas" [class.disabled]="loading()">Cancelar</a>
+    </div>
+  </form>
+</div>
+
+

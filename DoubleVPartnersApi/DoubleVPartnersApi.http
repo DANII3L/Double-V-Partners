@@ -1,0 +1,90 @@
+### Variables
+@baseUrl = https://localhost:7039
+@token = 
+
+### Login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "admin123"
+}
+
+### Obtener todos los clientes
+GET {{baseUrl}}/api/clientes/get
+Authorization: Bearer {{token}}
+
+### Obtener cliente por ID
+GET {{baseUrl}}/api/clientes/get/507f1f77bcf86cd799439011
+Authorization: Bearer {{token}}
+
+### Crear nuevo cliente
+POST {{baseUrl}}/api/clientes/create
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Juan",
+  "apellido": "Pérez",
+  "email": "juan.perez@email.com",
+  "telefono": "3001234567",
+  "direccion": "Calle 123 #45-67"
+}
+
+### Actualizar cliente
+PUT {{baseUrl}}/api/clientes/update/507f1f77bcf86cd799439011
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Juan Carlos",
+  "apellido": "Pérez",
+  "email": "juan.perez@email.com",
+  "telefono": "3001234567",
+  "direccion": "Calle 123 #45-67"
+}
+
+### Eliminar cliente
+DELETE {{baseUrl}}/api/clientes/delete/507f1f77bcf86cd799439011
+Authorization: Bearer {{token}}
+
+### Obtener todos los productos
+GET {{baseUrl}}/api/productos/get
+Authorization: Bearer {{token}}
+
+### Crear nuevo producto
+POST {{baseUrl}}/api/productos/create
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Producto de prueba",
+  "descripcion": "Descripción del producto",
+  "precio": 100.50,
+  "stock": 50,
+  "categoria": "Electrónicos"
+}
+
+### Obtener todas las facturas
+GET {{baseUrl}}/api/facturas/get
+Authorization: Bearer {{token}}
+
+### Crear nueva factura
+POST {{baseUrl}}/api/facturas/create
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "clienteId": "507f1f77bcf86cd799439011",
+  "detalles": [
+    {
+      "productoId": "507f1f77bcf86cd799439012",
+      "nombreProducto": "Producto 1",
+      "cantidad": 2,
+      "precioUnitario": 50.00,
+      "subtotal": 100.00
+    }
+  ],
+  "observaciones": "Factura de prueba"
+}
